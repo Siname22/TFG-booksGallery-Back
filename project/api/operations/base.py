@@ -435,7 +435,7 @@ def detailBookList(idBooks, idList, current_user):
 #delete del un libro de la lista
 @ops_all.route('/delete_book_list/<int:idBook>/<int:idList>/', methods=['DELETE'])
 @token_required
-def delete_bookList(idBook, idList, current_user):
+def delete_bookList(current_user, idBook, idList ):
     list = list_in_user(current_user.id, idList)
     resultado = []
     for i in list:
