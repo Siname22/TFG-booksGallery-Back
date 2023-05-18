@@ -22,9 +22,7 @@ def token_required(f):
 
         if 'Authorization' in request.headers:
             token = request.headers['Authorization']
-            print(token)
             data = jwt.decode(token, DevelopmentConfig.SECRET_KEY, algorithms=["HS256"])
-            print('data', data)
             current_user = Users.query.filter_by(id=data['id']).first()
             return f(current_user, *args, **kwargs)
 
@@ -82,10 +80,11 @@ def all_users():
     return jsonify(resultado)
 
 #get usersId
-@ops_all.route('/user')
+@ops_all.route('/user/')
 @token_required
 def userId(current_user):
-    user = Users.query.get(current_user.id)
+    user = Users.query.filter_by(id = current_user.id).first()
+    print('User: ', user)
     if not user:
         return jsonify({'mensaje': 'No se encontro el user'}), 404
     
