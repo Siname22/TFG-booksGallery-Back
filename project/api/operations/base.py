@@ -84,7 +84,6 @@ def all_users():
 @token_required
 def userId(current_user):
     user = Users.query.filter_by(id = current_user.id).first()
-    print('User: ', user)
     if not user:
         return jsonify({'mensaje': 'No se encontro el user'}), 404
     
