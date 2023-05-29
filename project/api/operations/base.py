@@ -53,7 +53,7 @@ def login_user():
     print('La contraseña es: ', check_password_hash(generate_password_hash(user.passwd), password=password))
    
     if check_password_hash(generate_password_hash(user.passwd), password=password):
-        token = jwt.encode({'id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, 
+        token = jwt.encode({'id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=1440)}, 
                            DevelopmentConfig.SECRET_KEY, algorithm="HS256")  
         print('El token del user: ', token)
         return jsonify({'token' : token }) 
@@ -179,6 +179,51 @@ def buscar_libros(busqueda):
 
 """ -----------------------------------------------POST---------------------------------------------------------"""
 
+@ops_all.route('/addBook/', methods=[ 'POST'])
+@token_required
+def add_book(current_user):
+    book = request.get_json()
+    
+    id_User = current_user.id
+    
+    bookExiste = Books.query.filter_by(name = book['name']).first()
+
+    if bookExiste is None:
+        autorExiste = Author.query.filter_by(name = book['autor']).first()
+
+        if autorExiste is None:
+            autorExiste = Author (
+                name = book['autor'],
+                photo = ''
+            )
+            db.session.add(autorExiste)
+            db.session.commit()
+        bookNew = Books(
+            name = book['name'],
+            portrait = book['portada'],
+            publishing = book['editorial'],
+            saga = book['saga'],
+            synopsis = book['descripcion'],
+            id_Author = autorExiste.id
+        )
+        db.session.add(bookNew)
+        db.session.commit()
+        print('Libro nuevo ------------->', bookNew)
+
+        
+        bookNewToUser = UsersBooks(
+            id_Books = bookNew.id,
+            id_Users = id_User,
+            favoritos = False
+        )
+        db.session.add(bookNewToUser)
+            
+        db.session.commit()
+        return jsonify(bookNewToUser.to_dict()), 201
+    else:
+        return jsonify({'mesagge': 'El libro ya existe'}),404
+
+    
 
 """ ------------------------------------operaciones de la tabla autores---------------------------------------- """
 
@@ -236,7 +281,7 @@ def all_list(current_user):
 
 """ -----------------------------------------------POST---------------------------------------------------------"""
 #post para añadir una lista a un user
-@ops_all.route('/addList/', methods=['POST'])
+@ops_all.route('/addList/', methods=[ 'POST'])
 @token_required
 def add_list(current_user):
     name = request.json['name']
@@ -248,7 +293,7 @@ def add_list(current_user):
         id_User = id_User
     )
     db.session.add(list)
-    db.session.commi()
+    db.session.commit()
     return jsonify(list.to_dict()), 201
 
 """ -----------------------------------------------DELETE-------------------------------------------------------"""
@@ -366,9 +411,24 @@ def detail_book_list(idDetailBook,current_user):
 
     return resultado
 """-------------------------------------------------POST--------------------------------------------------------"""
+@ops_all.route('/addBookToGallery/', methods=['POST'])
+@token_required
+def addBook(current_user):
+    titleBook = request.json['name']
+    idUser = current_user.id
+    if titleBook is None:
+        return jsonify({'No hay un titulo del libro para buscar'})
+    
+    book = Books.query.filter_by(name = titleBook).first()
 
-
-
+    userBook = UsersBooks(
+        id_Books = book.id,
+        id_Users = idUser,
+        favoritos = False 
+    )
+    db.session.add(userBook)
+    db.session.commit()
+    return jsonify(userBook.to_dict()), 201
 
 
 
@@ -376,7 +436,7 @@ def detail_book_list(idDetailBook,current_user):
 #delete de un libro de la galeria del user
 @ops_all.route('/delete_book_gallery/<int:idDeleteBook>/', methods=['DELETE'])
 @token_required
-def delete_libro(idDeleteBook, current_user):
+def delete_libro(current_user, idDeleteBook):
     book_deleteBg = UsersBooks.query.filter_by(id_Users = current_user.id, id_Books = idDeleteBook).delete()
     db.session.commit()
     if not book_deleteBg:

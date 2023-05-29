@@ -7,6 +7,6 @@ class UsersBooks(db.Model):
     def to_dict(self):
         return{
             'id_usuario': self.id_Users,
-            'id_libros': self.id_Books,
-            'favoritos':self.favoritos
+            'id_libros':  self.id_Books,
+            'favoritos':  self.favoritos
         }

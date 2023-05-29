@@ -12,6 +12,7 @@ class DevelopmentConfig(BaseConfig):
     CORS_HEADERS = 'Content-Type'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
+
 class ProductionConfig(BaseConfig):
     """Production Configuration"""
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
