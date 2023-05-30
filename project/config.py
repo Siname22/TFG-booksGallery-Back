@@ -4,11 +4,11 @@ class BaseConfig:
     """Base Confilguration"""
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY ='K1m3tsuN0Ya1ba'
+    SECRET_KEY =os.environ.get('SECRET_KEY')
 
 class DevelopmentConfig(BaseConfig):
     """Development Configuration"""
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:@localhost/books_gallery'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     CORS_HEADERS = 'Content-Type'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 

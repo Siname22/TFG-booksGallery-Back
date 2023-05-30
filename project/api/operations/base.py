@@ -420,15 +420,27 @@ def addBook(current_user):
         return jsonify({'No hay un titulo del libro para buscar'})
     
     book = Books.query.filter_by(name = titleBook).first()
+    print(book)
 
-    userBook = UsersBooks(
-        id_Books = book.id,
-        id_Users = idUser,
-        favoritos = False 
-    )
-    db.session.add(userBook)
-    db.session.commit()
-    return jsonify(userBook.to_dict()), 201
+    if book is None:
+        return jsonify({ 'El libro no existe'}), 404
+    else:
+        userBook = UsersBooks.query.filter_by(id_Books = book.id).first()
+        print (userBook)
+        if userBook is None:
+            userBook = UsersBooks(
+                id_Books = book.id,
+                id_Users = idUser,
+                favoritos = False 
+            )
+            db.session.add(userBook)
+            db.session.commit()
+            return jsonify(userBook.to_dict()), 201
+        else:
+            return jsonify({'message':'El libro ya esta añadido'})
+
+    
+    
 
 
 
@@ -487,6 +499,13 @@ def detailBookList(idBooks, idList, current_user):
     
     resultado.append(infoDef)
     return jsonify(resultado)
+
+
+""" -----------------------------------------------POST-------------------------------------------------------- """
+
+
+
+
 
 """ -----------------------------------------------DELETE-------------------------------------------------------"""
 
