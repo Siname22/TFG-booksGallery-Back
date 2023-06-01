@@ -441,8 +441,21 @@ def addBook(current_user):
 
     
     
+@ops_all.route('/change_favorites/', methods=['POST'])
+@token_required
+def changeHeart(current_user):
+    idBook = request.json['idBook']
+    idUser = current_user.id
 
+    bookUser = UsersBooks.query.filter_by(id_Books = idBook, id_Users = idUser).first()
 
+    if bookUser is None:
+        return jsonify({'message':'No existe el libro'}),404
+    
+    print('Este es el libro a cambiar -------------->', bookUser)
+    bookUser.favoritos = not bookUser.favoritos
+    db.session.commit()
+    return jsonify(bookUser.to_dict()), 201
 
 """ -----------------------------------------------DELETE-------------------------------------------------------"""
 #delete de un libro de la galeria del user
@@ -502,7 +515,31 @@ def detailBookList(idBooks, idList, current_user):
 
 
 """ -----------------------------------------------POST-------------------------------------------------------- """
+@ops_all.route('/addBookToList/<int:idList>', methods=['POST'])
+@token_required
+def addBookList(current_user, idList):
+    idUser = current_user.id
+    listId = idList
+    bookId = request.json['idBook']
 
+    print('Lo que recojo------------------------->', listId, bookId)
+    
+    listuser = list_in_user(idUser, listId)
+    if listuser is None:
+        return jsonify({'No existe la lista a la que quieres añadir el libro'}),404
+    
+    booklist = BooksList.query.filter_by(id_List = listId)
+
+    for b in booklist:
+        if b.id_Books == bookId:
+            return jsonify({'El libro ya esta añadido'})
+    bookNew = BooksList(
+        id_Books = bookId, 
+        id_List = listId
+    )
+    db.session.add(bookNew)
+    db.session.commit()
+    return jsonify(bookNew.to_dict()), 201
 
 
 
@@ -512,11 +549,22 @@ def detailBookList(idBooks, idList, current_user):
 #delete del un libro de la lista
 @ops_all.route('/delete_book_list/<int:idBook>/<int:idList>/', methods=['DELETE'])
 @token_required
-def delete_bookList(current_user, idBook, idList ):
+def deleteList(current_user, idBook, idList ):
     list = list_in_user(current_user.id, idList)
     resultado = []
     for i in list:
         booksList = BooksList.query.filter_by(id_List = i.id, id_Books = idBook).delete()
+        db.session.commit()
+        resultado.append(booksList)
+    return jsonify(resultado)
+
+@ops_all.route('/delete_list/<int:idList>/', methods=['DELETE'])
+@token_required
+def delete_bookList(current_user,  idList ):
+    list = list_in_user(current_user.id, idList)
+    resultado = []
+    for i in list:
+        booksList = List.query.filter_by(id = i.id, id_User = current_user.id).delete()
         db.session.commit()
         resultado.append(booksList)
     return jsonify(resultado)
