@@ -2,6 +2,7 @@ import os
 import jwt
 import datetime
 import uuid
+import requests
 from flask import Blueprint, jsonify, request, make_response
 from project.api.models.Author import Author, db
 from project.api.models.Books import Books, db
@@ -160,7 +161,62 @@ def get_info_book_gallery_Id(idBook):
 #get de busqueda de libros
 @ops_all.route('/books/<string:busqueda>', methods=['GET'])
 def buscar_libros(busqueda):
-    libros = Books.query.filter(Books.name.like(f'%{busqueda}%') | 
+
+
+    resultado =[]
+    url = "https://www.googleapis.com/books/v1/volumes"
+    parametros = {
+        "q": f"{busqueda}", # Filtrar por libros en español
+        "maxResults": 30  # Establecer el límite máximo de registros
+    }
+    respuesta = requests.get(url, params=parametros)
+
+    datos_encontrados = respuesta.json()
+    libros_encontrados = datos_encontrados['items']
+    
+    for i in libros_encontrados:
+        i = i['volumeInfo']
+        portada = i['imageLinks']['thumbnail'] if 'imageLinks' in i else ''
+        
+        autor = i['authors'][0] if 'authors' in i else "Autor desconocido"
+        autorExiste = Author.query.filter_by(name = autor).first()
+        if autorExiste is None:
+            autorExiste = Author(
+                name = autor,
+                photo = ''
+            )
+            db.session.add(autorExiste)
+            db.session.commit()
+            
+        libroNew = Books.query.filter_by(name = i['title'],id_Author = autorExiste.id).first()
+        if libroNew is None:
+            libroNew = Books(
+                name = i['title'],
+                portrait = portada,
+                publishing = i.get('publisher',''),
+                saga = i.get('subtitle', ''),
+                synopsis = i.get('description', ''),
+                id_Author = autorExiste.id
+            )
+            db.session.add(libroNew)
+            db.session.commit()
+        
+        infoDef = libroNew.to_dict()
+        infoAutor = getInfoAutor_Id(libroNew.id_Author)
+        del infoDef['id_autor']
+        infoDef['autor'] = infoAutor.to_dict()
+        resultado.append(infoDef)
+
+   
+    
+    return jsonify(resultado)
+    
+    
+    
+
+
+
+"""     libros = Books.query.filter(Books.name.like(f'%{busqueda}%') | 
                                 Books.saga.like(f'%{busqueda}%') | 
                                 (Books.id_Author == Author.name.like(f'%{busqueda}%'))
                                 ).all()
@@ -174,8 +230,15 @@ def buscar_libros(busqueda):
         del infoDef['id_autor']
         infoDef['autor'] = infoAutor.to_dict()
         
-        resultado.append(infoDef)
-    return jsonify(resultado)
+        resultado.append(infoDef) """
+
+        
+    
+    
+    
+    
+
+
 
 """ -----------------------------------------------POST---------------------------------------------------------"""
 
