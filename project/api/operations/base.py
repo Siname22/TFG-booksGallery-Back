@@ -13,6 +13,7 @@ from project.api.models.UsersBooks import UsersBooks, db
 from functools import wraps
 from werkzeug.security import check_password_hash, generate_password_hash
 from project.config import DevelopmentConfig
+from socket import *
 
 
 ops_all = Blueprint('operaciones', __name__)
@@ -161,13 +162,14 @@ def get_info_book_gallery_Id(idBook):
 #get de busqueda de libros
 @ops_all.route('/books/<string:busqueda>', methods=['GET'])
 def buscar_libros(busqueda):
-
-
+    s=socket(AF_INET,SOCK_STREAM)
+    s.settimeout(20.0)
+    
     resultado =[]
     url = "https://www.googleapis.com/books/v1/volumes"
     parametros = {
-        "q": f"{busqueda}", # Filtrar por libros en español
-        "maxResults": 30  # Establecer el límite máximo de registros
+        "q": f"{busqueda}", 
+        "maxResults": 15  # Establecer el límite máximo de registros
     }
     respuesta = requests.get(url, params=parametros)
 
@@ -187,14 +189,28 @@ def buscar_libros(busqueda):
             )
             db.session.add(autorExiste)
             db.session.commit()
+        
+        title_subtitle = i['title']
+
+        title = i.get('title', '');
+        subtitle = i.get('subtitle', '');        
+
+        if (title_subtitle.find(".") >= 0):
+            subtitle = title_subtitle[0:title_subtitle.find(".")].strip()
+            title = title_subtitle[title_subtitle.find(".") + 1:].strip()
+        elif (title_subtitle.find("(") >= 0 and title_subtitle.find(")") >= 0):
+            title = title_subtitle[0:title_subtitle.find("(")].strip()
+            subtitle = title_subtitle[title_subtitle.find("(") + 1: title_subtitle.rfind(")")].strip()
+
             
-        libroNew = Books.query.filter_by(name = i['title'],id_Author = autorExiste.id).first()
+        libroNew = Books.query.filter_by(name = title,id_Author = autorExiste.id).first()
+
         if libroNew is None:
             libroNew = Books(
-                name = i['title'],
+                name = title,
                 portrait = portada,
                 publishing = i.get('publisher',''),
-                saga = i.get('subtitle', ''),
+                saga = subtitle,
                 synopsis = i.get('description', ''),
                 id_Author = autorExiste.id
             )
