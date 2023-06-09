@@ -1,3 +1,4 @@
+import requests
 import os
 import datetime
 from flask_cors import CORS
