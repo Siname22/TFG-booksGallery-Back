@@ -20,7 +20,6 @@ def create_app():
     app.config.from_object(app_settings)
 
     
-
     # setup extensions
     db.init_app(app)
     
