@@ -277,7 +277,7 @@ def add_book(current_user):
             )
             db.session.add(autorExiste)
             db.session.commit()
-        bookNew = Books(
+        bookExiste = Books(
             name = book['name'],
             portrait = book['portada'],
             publishing = book['editorial'],
@@ -285,13 +285,13 @@ def add_book(current_user):
             synopsis = book['descripcion'],
             id_Author = autorExiste.id
         )
-        db.session.add(bookNew)
+        db.session.add(bookExiste)
         db.session.commit()
-        print('Libro nuevo ------------->', bookNew)
+        print('Libro nuevo ------------->', bookExiste)
 
         
     bookNewToUser = UsersBooks(
-        id_Books = bookNew.id,
+        id_Books = bookExiste.id,
         id_Users = id_User,
         favoritos = False
     )
