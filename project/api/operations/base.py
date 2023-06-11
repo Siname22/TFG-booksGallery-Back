@@ -290,17 +290,15 @@ def add_book(current_user):
         print('Libro nuevo ------------->', bookNew)
 
         
-        bookNewToUser = UsersBooks(
-            id_Books = bookNew.id,
-            id_Users = id_User,
-            favoritos = False
-        )
-        db.session.add(bookNewToUser)
-            
-        db.session.commit()
-        return jsonify(bookNewToUser.to_dict()), 201
-    else:
-        return jsonify({'mesagge': 'El libro ya existe'}),404
+    bookNewToUser = UsersBooks(
+        id_Books = bookNew.id,
+        id_Users = id_User,
+        favoritos = False
+    )
+    db.session.add(bookNewToUser)
+        
+    db.session.commit()
+    return jsonify(bookNewToUser.to_dict()), 201
 
     
 

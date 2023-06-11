@@ -1,4 +1,6 @@
 from project.__init__ import create_app
+import sys
+print(sys.version)
 
 
 app = create_app()
